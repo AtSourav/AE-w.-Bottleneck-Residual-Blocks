@@ -31,7 +31,7 @@ def plot_dataset_images(img_set,fig_size,rows,columns,axis_arg='off'):
 	
 	axis_arg  : The arguments for plt.axis(). The default setting 'off'
 		     ensures that the axes are not shown or labelled. For 
-		     other options, see docu for matplotliv.pyplot.axis() .
+		     other options, see docu for matplotliv.pyplot.axis().
 		     
 		     
 	Returns
