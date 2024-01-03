@@ -3,7 +3,7 @@
 """
 
 """
-Module for functions that I often use in my notebooks on CNN based architectures on image datasets.
+Module for plotting functions that I often use in my notebooks on CNN based architectures on image datasets.
 """
 
 import numpy as np
