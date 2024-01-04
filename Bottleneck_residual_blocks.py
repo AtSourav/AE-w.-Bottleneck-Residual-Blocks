@@ -33,7 +33,7 @@ class conv2d_block(layers.Layer):     # it's not the most general conv2d layer w
 	def call(self,x):
 		x = self.conv2d(x)
 		
-		if use_bn=='True'
+		if use_bn=='True':
 			x = layers.BatchNormalization(axis=-1)(x)
 			
 		x = layers.ReLU()(x)
@@ -53,7 +53,7 @@ class conv2dtrans_block(layers.Layer):
 	def call(self,x):
 		x = self.conv2dtrans(x)
 		
-		if use_bn=='True'
+		if use_bn=='True':
 			x = layers.BatchNormalization(axis=-1)(x)
 			
 		x = layers.ReLU()(x)
