@@ -41,6 +41,26 @@ class conv2d_block(layers.Layer):     # it's not the most general conv2d layer w
 		return x
 		
 		
+class conv2dtrans_block(layers.Layer):    
+
+	def __init__(self, num_filters, kernel, strides= (1,1), padding='valid', kernel_initializer, use_bn='True'):
+		super().__init__()
+		
+		self.conv2dtrans = layers.Conv2DTranspose(filters=num_filters, kernel_size=kernel, strides=strides, 
+								padding=padding, kernel_initializer=kernel_initializer)
+								
+	
+	def call(self,x):
+		x = self.conv2dtrans(x)
+		
+		if use_bn=='True'
+			x = layers.BatchNormalization(axis=-1)(x)
+			
+		x = layers.ReLU()(x)
+		
+		return x
+		
+		
 def min_pool2D(pool_size, strides, padding='valid',x):
 	
 	x_int = -x
@@ -52,22 +72,26 @@ def min_pool2D(pool_size, strides, padding='valid',x):
 		
 		
 		
-class bottleneck_residual_block(layers.Layer):
+class bottleneck_residual_conv2D_block(layers.Layer):
 
-	def __init__(self, num_filters, kernel, strides=(1,1), padding='valid', kernel_initializer, use_bn='True', pooling):
+	def __init__(self, num_filters, compress_ratio, kernel, strides=(1,1), padding='valid', kernel_initializer, use_bn='True', pooling):
 	
 		# kernel, strides, and padding are parameters only relevant to the second conv2d layer that is sandwiched 
 		# between the two 1x1 kernel conv layers.
 		
 		# pooling can be 'min', 'max', or 'avg'.
 		
+		# compress_ratio is the ratio by which we compress using the first 1x1 conv layer.
+		# using a compress_ratio of less than 1 will create an inverted residual block.
+		
 		super().__init__()
 		
 		# first conv2d block with 1x1 kernel and strides = (1,1)
-		self.conv1 = conv2dblock(num_filters//2, kernel=1, kernel_initializer=kernel_initializer, use_bn=use_bn)
+		self.conv1 = conv2d_block(num_filters//compress_ratio, kernel=1, kernel_initializer=kernel_initializer, use_bn=use_bn)
 		
-		# second conv2d layer with kernel size and strides as specified
-		self.conv2 = conv2dblock(num_filters//2, kernel=kernel, strides=strides, padding=padding, kernel_initializer=kernel_initializer, use_bn=use_bn)
+		# second conv2d layer with given kernel size and strides as specified
+		self.conv2 = conv2d_block(num_filters//compress_ratio, kernel=kernel, strides=strides, padding=padding, 
+											kernel_initializer=kernel_initializer, use_bn=use_bn)
 		
 		# third conv2d layer with 1x1 kernel to restore the number of channels. No activation after this one.
 		self.conv3 = layers.Conv2D(filters=num_filters, kernel_size=1, kernel_initializer=kernel_initializer)
@@ -101,6 +125,65 @@ class bottleneck_residual_block(layers.Layer):
 			else:
 				x_skip = layers.AveragePooling2D(pool_size=self.kernel, strides=self.strides, padding=self.padding)(x)
 				
+		else:
+			x_skip = x
+			
+			
+		x_out = layers.Add()[x_int, x_skip]
+		
+		x_out = layers.ReLU()(x_out)
+		
+		return x_out
+		
+		
+		
+		
+
+class bottleneck_residual_conv2Dtrans_block(layers.Layer):
+
+	def __init__(self, num_filters, compress_ratio, kernel, padding='valid', kernel_initializer, use_bn='True'):
+	
+		# kerneland padding are parameters only relevant to the second conv2d layer that is sandwiched 
+		# between the two 1x1 kernel conv layers.
+		
+		# we are defining this with a fixed stride length of 1.
+		
+		# pooling can be 'min', 'max', or 'avg'.
+		
+		# compress_ratio is the ratio by which we compress using the first 1x1 conv layer.
+		# using a compress_ratio of less than 1 will create an inverted residual block.
+		
+		super().__init__()
+		
+		# first conv2dtrans block with 1x1 kernel and strides = (1,1)
+		self.conv1trans = conv2dtrans_block(num_filters//compress_ratio, kernel=1, kernel_initializer=kernel_initializer, use_bn=use_bn)
+		
+		# second conv2dtrans layer with given kernel size and strides = (1,1)
+		self.conv2trans = conv2dtrans_block(num_filters//compress_ratio, kernel=kernel, padding=padding, 
+											kernel_initializer=kernel_initializer, use_bn=use_bn)
+		
+		# third conv2dtrans layer with 1x1 kernel to restore the number of channels. No activation after this one.
+		self.conv3trans = layers.Conv2DTranspose(filters=num_filters, kernel_size=1, kernel_initializer=kernel_initializer)
+		
+		# optional min pooling to be applied to the skipped connection to ensure that the tensors to be added have 
+		# equal dimension. this is only needed if the padding is 'valid'.
+		
+		self.kernel = kernel
+		self.padding = padding
+		
+		
+	def call(self,x):
+	
+		x_int = self.conv1trans(x)
+		x_int = self.conv2trans(x_int)
+		x_int = self.conv3trans(x_int)
+		
+		if self.padding != 'valid' and self.padding != 'same':
+			raise Exception("padding must be either 'valid' or 'same'.")
+		
+		if self.padding=='valid':
+			x_skip = layers.ZeroPadding2D(padding=(self.kernel - 1))(x)         # to make sure x_skip has the same dimensions
+											       # as x_int
 		else:
 			x_skip = x
 			
