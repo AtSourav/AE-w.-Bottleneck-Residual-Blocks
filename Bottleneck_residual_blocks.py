@@ -142,7 +142,7 @@ class bottleneck_residual_conv2D_block(layers.Layer):
 			x_skip = x
 			
 			
-		x_out = layers.Add()[x_int, x_skip]
+		x_out = layers.Add()([x_int, x_skip])
 		
 		x_out = layers.ReLU()(x_out)
 		
@@ -201,7 +201,7 @@ class bottleneck_residual_conv2Dtrans_block(layers.Layer):
 			x_skip = x
 			
 			
-		x_out = layers.Add()[x_int, x_skip]
+		x_out = layers.Add()([x_int, x_skip])
 		
 		x_out = layers.ReLU()(x_out)
 		
