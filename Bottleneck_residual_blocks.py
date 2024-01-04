@@ -198,7 +198,7 @@ class bottleneck_residual_conv2Dtrans_block(layers.Layer):
 		# equal dimension. this is only needed if the padding is 'valid'.
 		
 		p = (kernel - 1)//2
-		self.zeropaf_sym = layers.ZeroPadding2D(padding=p)
+		self.zeropad_sym = layers.ZeroPadding2D(padding=p)
 		self.zeropad_asym = layers.ZeroPadding2D(padding=((p,kernel-1-p),(p,kernel-1-p)))
 		
 		self.add = layers.Add()
