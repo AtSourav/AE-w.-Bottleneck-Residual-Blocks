@@ -89,6 +89,9 @@ class bottleneck_residual_conv2D_block(layers.Layer):
 
 	def __init__(self, num_filters, compress_ratio, kernel, kernel_initializer, pooling, strides=(1,1), padding='valid', use_bn='True'):
 	
+		# num_filters should be the same as the number of channels in the output of the previous layer, otherwise addition with the 
+		# skipped connection won't be possible.
+	
 		# kernel, strides, and padding are parameters only relevant to the second conv2d layer that is sandwiched 
 		# between the two 1x1 kernel conv layers.
 		
@@ -155,6 +158,9 @@ class bottleneck_residual_conv2D_block(layers.Layer):
 class bottleneck_residual_conv2Dtrans_block(layers.Layer):
 
 	def __init__(self, num_filters, compress_ratio, kernel, kernel_initializer, padding='valid', use_bn='True'):
+	
+		# num_filters should be the same as the number of channels in the output of the previous layer, otherwise addition with the 
+		# skipped connection won't be possible.
 	
 		# kerneland padding are parameters only relevant to the second conv2d layer that is sandwiched 
 		# between the two 1x1 kernel conv layers.
