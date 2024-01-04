@@ -61,7 +61,7 @@ class conv2dtrans_block(layers.Layer):
 		return x
 		
 		
-def min_pool2D(pool_size, strides, padding='valid',x):
+def min_pool2D(pool_size, strides, padding,x):
 	
 	x_int = -x
 	x_int = layers.MaxPooling2D(pool_size=pool_size, strides=strides, padding=padding)(x_int)
