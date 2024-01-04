@@ -61,13 +61,23 @@ class conv2dtrans_block(layers.Layer):
 		return x
 		
 		
-def min_pool2D(pool_size, strides, padding,x):
+class min_pool2D(layers.Layer):
 	
-	x_int = -x
-	x_int = layers.MaxPooling2D(pool_size=pool_size, strides=strides, padding=padding)(x_int)
-	x_out = -x_int
+	def __init__(self, pool_size, strides=(1,1), padding='valid'):
+		super().__init__()
+		
+		self.maxpool = layers.MaxPooling2D(pool_size=pool_size, strides=strides, padding=padding)
+		
+		self.pool_size = pool_size
+		self.strides = strides
+		self.padding = padding
 	
-	return x_out
+	def call(self,x):
+		x_int = -x
+		x_int = layers.MaxPooling2D(pool_size=self.pool_size, strides=self.strides, padding=self.padding)(x_int)
+		x_out = -x_int
+	
+		return x_out
 		
 		
 		
@@ -119,7 +129,7 @@ class bottleneck_residual_conv2D_block(layers.Layer):
 				raise Exception("pooling must be 'min', 'max', or 'avg'.")
 				
 			if self.pooling == 'min':
-				x_skip = min_pool2D(pool_size=self.kernel, strides=self.strides, padding=self.padding, x)
+				x_skip = min_pool2D(pool_size=self.kernel, strides=self.strides, padding=self.padding)(x)
 			elif self.pooling == 'max':
 				x_skip = layers.MaxPooling2D(pool_size=self.kernel, strides=self.strides, padding=self.padding)(x)
 			else:
