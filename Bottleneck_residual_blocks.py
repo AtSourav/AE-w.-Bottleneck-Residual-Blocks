@@ -201,8 +201,13 @@ class bottleneck_residual_conv2Dtrans_block(layers.Layer):
 			raise Exception("padding must be either 'valid' or 'same'.")
 		
 		if self.padding=='valid':
-			x_skip = layers.ZeroPadding2D(padding=(self.kernel - 1))(x)         # to make sure x_skip has the same dimensions
-											       # as x_int
+			if (self.kernel - 1)%2 == 0:  
+				p = (self.kernel - 1)//2                                          #  in this case the padding can be symmetric
+				x_skip = layers.ZeroPadding2D(padding=p)(x)        	     	     # to make sure x_skip has the same 
+											             # dimensions as x_int
+			else:
+				# in this case the zero padding is assymetric
+				x_skip = layers.ZeroPadding2D(padding=((p,self.kernel-1-p),(p,self.kernel-1-p)))(x) 
 		else:
 			x_skip = x
 			
