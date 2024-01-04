@@ -29,6 +29,10 @@ class conv2d_block(layers.Layer):     # it's not the most general conv2d layer w
 		self.conv2d = layers.Conv2D(filters=num_filters, kernel_size=kernel, strides=strides, 
 								padding=padding, kernel_initializer=kernel_initializer)
 								
+		self.batchnorm = layers.BatchNormalization(axis=-1)
+		
+		self.relu = layers.ReLU()
+								
 		self.use_bn = use_bn
 								
 	
@@ -36,9 +40,9 @@ class conv2d_block(layers.Layer):     # it's not the most general conv2d layer w
 		x = self.conv2d(x)
 		
 		if self.use_bn=='True':
-			x = layers.BatchNormalization(axis=-1)(x)
+			x = self.batchnorm(x)
 			
-		x = layers.ReLU()(x)
+		x = self.relu(x)
 		
 		return x
 		
@@ -50,6 +54,11 @@ class conv2dtrans_block(layers.Layer):
 		
 		self.conv2dtrans = layers.Conv2DTranspose(filters=num_filters, kernel_size=kernel, strides=strides, 
 								padding=padding, kernel_initializer=kernel_initializer)
+								
+		self.batchnorm = layers.BatchNormalization(axis=-1)
+		
+		self.relu = layers.ReLU()
+		
 		self.use_bn = use_bn	
 							
 	
@@ -57,9 +66,9 @@ class conv2dtrans_block(layers.Layer):
 		x = self.conv2dtrans(x)
 		
 		if self.use_bn=='True':
-			x = layers.BatchNormalization(axis=-1)(x)
+			x = self.batchnorm(x)
 			
-		x = layers.ReLU()(x)
+		x = self.relu(x)
 		
 		return x
 		
@@ -70,14 +79,10 @@ class min_pool2D(layers.Layer):
 		super().__init__()
 		
 		self.maxpool = layers.MaxPooling2D(pool_size=pool_size, strides=strides, padding=padding)
-		
-		self.pool_size = pool_size
-		self.strides = strides
-		self.padding = padding
 	
 	def call(self,x):
 		x_int = -x
-		x_int = layers.MaxPooling2D(pool_size=self.pool_size, strides=self.strides, padding=self.padding)(x_int)
+		x_int = self.maxpool(x_int)
 		x_out = -x_int
 	
 		return x_out
@@ -115,8 +120,13 @@ class bottleneck_residual_conv2D_block(layers.Layer):
 		# optional min pooling to be applied to the skipped connection to ensure that the tensors to be added have 
 		# equal dimension. this is only needed if the padding is 'valid'.
 		
-		self.kernel = kernel
-		self.strides = strides
+		self.minpool = min_pool2D(pool_size=kernel, strides=strides, padding=padding)
+		self.maxpool = layers.MaxPooling2D(pool_size=kernel, strides=strides, padding=padding)
+		self.avgpool = layers.AveragePooling2D(pool_size=kernel, strides=strides, padding=padding)
+		
+		self.add = layers.Add()
+		self.relu = layers.ReLU()
+		
 		self.padding = padding
 		self.pooling = pooling
 		
@@ -135,19 +145,19 @@ class bottleneck_residual_conv2D_block(layers.Layer):
 				raise Exception("pooling must be 'min', 'max', or 'avg'.")
 				
 			if self.pooling == 'min':
-				x_skip = min_pool2D(pool_size=self.kernel, strides=self.strides, padding=self.padding)(x)
+				x_skip = self.minpool(x)
 			elif self.pooling == 'max':
-				x_skip = layers.MaxPooling2D(pool_size=self.kernel, strides=self.strides, padding=self.padding)(x)
+				x_skip = self.maxpool(x)
 			else:
-				x_skip = layers.AveragePooling2D(pool_size=self.kernel, strides=self.strides, padding=self.padding)(x)
+				x_skip = self.avgpool(x)
 				
 		else:
 			x_skip = x
 			
 			
-		x_out = layers.Add()([x_int, x_skip])
+		x_out = self.add([x_int, x_skip])
 		
-		x_out = layers.ReLU()(x_out)
+		x_out = self.relu(x_out)
 		
 		return x_out
 		
@@ -187,6 +197,13 @@ class bottleneck_residual_conv2Dtrans_block(layers.Layer):
 		# optional min pooling to be applied to the skipped connection to ensure that the tensors to be added have 
 		# equal dimension. this is only needed if the padding is 'valid'.
 		
+		p = (kernel - 1)//2
+		self.zeropaf_sym = layers.ZeroPadding2D(padding=p)
+		self.zeropad_asym = layers.ZeroPadding2D(padding=((p,kernel-1-p),(p,kernel-1-p)))
+		
+		self.add = layers.Add()
+		self.relu = layers.ReLU()
+		
 		self.kernel = kernel
 		self.padding = padding
 		
@@ -201,20 +218,19 @@ class bottleneck_residual_conv2Dtrans_block(layers.Layer):
 			raise Exception("padding must be either 'valid' or 'same'.")
 		
 		if self.padding=='valid':
-			if (self.kernel - 1)%2 == 0:  
-				p = (self.kernel - 1)//2                                          #  in this case the padding can be symmetric
-				x_skip = layers.ZeroPadding2D(padding=p)(x)        	     	     # to make sure x_skip has the same 
-											             # dimensions as x_int
+			if (self.kernel - 1)%2 == 0:                              #  in this case the padding can be symmetric
+				x_skip = self.zeropad_sym(x)        	     	     # to make sure x_skip has the same 
+										     # dimensions as x_int
 			else:
 				# in this case the zero padding is assymetric
-				x_skip = layers.ZeroPadding2D(padding=((p,self.kernel-1-p),(p,self.kernel-1-p)))(x) 
+				x_skip = self.zeropad_asym(x) 
 		else:
 			x_skip = x
 			
 			
-		x_out = layers.Add()([x_int, x_skip])
+		x_out = self.add([x_int, x_skip])
 		
-		x_out = layers.ReLU()(x_out)
+		x_out = self.relu(x_out)
 		
 		return x_out
 		
