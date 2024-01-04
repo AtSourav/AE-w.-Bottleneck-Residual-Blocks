@@ -23,7 +23,7 @@ from keras import layers
 
 class conv2d_block(layers.Layer):     # it's not the most general conv2d layer we could use.
 
-	def __init__(self, num_filters, kernel, strides= (1,1), padding='valid', kernel_initializer, use_bn='True'):
+	def __init__(self, num_filters, kernel, kernel_initializer, strides= (1,1), padding='valid', use_bn='True'):
 		super().__init__()
 		
 		self.conv2d = layers.Conv2D(filters=num_filters, kernel_size=kernel, strides=strides, 
@@ -43,7 +43,7 @@ class conv2d_block(layers.Layer):     # it's not the most general conv2d layer w
 		
 class conv2dtrans_block(layers.Layer):    
 
-	def __init__(self, num_filters, kernel, strides= (1,1), padding='valid', kernel_initializer, use_bn='True'):
+	def __init__(self, num_filters, kernel, kernel_initializer, strides= (1,1), padding='valid', use_bn='True'):
 		super().__init__()
 		
 		self.conv2dtrans = layers.Conv2DTranspose(filters=num_filters, kernel_size=kernel, strides=strides, 
@@ -74,7 +74,7 @@ def min_pool2D(pool_size, strides, padding='valid',x):
 		
 class bottleneck_residual_conv2D_block(layers.Layer):
 
-	def __init__(self, num_filters, compress_ratio, kernel, strides=(1,1), padding='valid', kernel_initializer, use_bn='True', pooling):
+	def __init__(self, num_filters, compress_ratio, kernel, kernel_initializer, pooling, strides=(1,1), padding='valid', use_bn='True'):
 	
 		# kernel, strides, and padding are parameters only relevant to the second conv2d layer that is sandwiched 
 		# between the two 1x1 kernel conv layers.
@@ -90,8 +90,8 @@ class bottleneck_residual_conv2D_block(layers.Layer):
 		self.conv1 = conv2d_block(num_filters//compress_ratio, kernel=1, kernel_initializer=kernel_initializer, use_bn=use_bn)
 		
 		# second conv2d layer with given kernel size and strides as specified
-		self.conv2 = conv2d_block(num_filters//compress_ratio, kernel=kernel, strides=strides, padding=padding, 
-											kernel_initializer=kernel_initializer, use_bn=use_bn)
+		self.conv2 = conv2d_block(num_filters//compress_ratio, kernel=kernel, kernel_initializer=kernel_initializer, 
+										strides=strides, padding=padding, use_bn=use_bn)
 		
 		# third conv2d layer with 1x1 kernel to restore the number of channels. No activation after this one.
 		self.conv3 = layers.Conv2D(filters=num_filters, kernel_size=1, kernel_initializer=kernel_initializer)
@@ -141,7 +141,7 @@ class bottleneck_residual_conv2D_block(layers.Layer):
 
 class bottleneck_residual_conv2Dtrans_block(layers.Layer):
 
-	def __init__(self, num_filters, compress_ratio, kernel, padding='valid', kernel_initializer, use_bn='True'):
+	def __init__(self, num_filters, compress_ratio, kernel, kernel_initializer, padding='valid', use_bn='True'):
 	
 		# kerneland padding are parameters only relevant to the second conv2d layer that is sandwiched 
 		# between the two 1x1 kernel conv layers.
@@ -159,8 +159,8 @@ class bottleneck_residual_conv2Dtrans_block(layers.Layer):
 		self.conv1trans = conv2dtrans_block(num_filters//compress_ratio, kernel=1, kernel_initializer=kernel_initializer, use_bn=use_bn)
 		
 		# second conv2dtrans layer with given kernel size and strides = (1,1)
-		self.conv2trans = conv2dtrans_block(num_filters//compress_ratio, kernel=kernel, padding=padding, 
-											kernel_initializer=kernel_initializer, use_bn=use_bn)
+		self.conv2trans = conv2dtrans_block(num_filters//compress_ratio, kernel=kernel, kernel_initializer=kernel_initializer, 
+														padding=padding, use_bn=use_bn)
 		
 		# third conv2dtrans layer with 1x1 kernel to restore the number of channels. No activation after this one.
 		self.conv3trans = layers.Conv2DTranspose(filters=num_filters, kernel_size=1, kernel_initializer=kernel_initializer)
