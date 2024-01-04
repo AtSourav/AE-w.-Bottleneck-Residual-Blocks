@@ -29,11 +29,13 @@ class conv2d_block(layers.Layer):     # it's not the most general conv2d layer w
 		self.conv2d = layers.Conv2D(filters=num_filters, kernel_size=kernel, strides=strides, 
 								padding=padding, kernel_initializer=kernel_initializer)
 								
+		self.use_bn = use_bn
+								
 	
 	def call(self,x):
 		x = self.conv2d(x)
 		
-		if use_bn=='True':
+		if self.use_bn=='True':
 			x = layers.BatchNormalization(axis=-1)(x)
 			
 		x = layers.ReLU()(x)
@@ -48,12 +50,13 @@ class conv2dtrans_block(layers.Layer):
 		
 		self.conv2dtrans = layers.Conv2DTranspose(filters=num_filters, kernel_size=kernel, strides=strides, 
 								padding=padding, kernel_initializer=kernel_initializer)
-								
+		self.use_bn = use_bn	
+							
 	
 	def call(self,x):
 		x = self.conv2dtrans(x)
 		
-		if use_bn=='True':
+		if self.use_bn=='True':
 			x = layers.BatchNormalization(axis=-1)(x)
 			
 		x = layers.ReLU()(x)
