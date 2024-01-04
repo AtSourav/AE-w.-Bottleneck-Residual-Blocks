@@ -45,9 +45,9 @@ def plot_dataset_images(img_set,fig_size,rows,columns,axis_arg='off'):
 
 	for image in img_set:            
   		for i in range(rows*columns):
-    		visual.add_subplot(rows,columns,i+1)
-    		plt.imshow(image)
-    		plt.axis(axis_arg)
+    			visual.add_subplot(rows,columns,i+1)
+    			plt.imshow(image)
+    			plt.axis(axis_arg)
     		
     		
     		
