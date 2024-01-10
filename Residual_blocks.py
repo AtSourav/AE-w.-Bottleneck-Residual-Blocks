@@ -111,7 +111,7 @@ class residual_conv2D_block(layers.Layer):
 		
 		self.conv_bn = conv2d_block(num_filters, kernel=kernel, kernel_initializer=kernel_initializer, strides=strides, padding=padding, use_bn=use_bn)
 		
-		self.conv_wobn = layers.Conv2D(filters=num_filters, kernel=kernel_size, kernel_initializer=kernel_initializer, strides=strides, padding=padding)
+		self.conv_wobn = layers.Conv2D(filters=num_filters, kernel_size = kernel, kernel_initializer=kernel_initializer, strides=strides, padding=padding)
 		
 		# optional pooling to be applied to the skipped connection to ensure that the tensors to be added have 
 		# equal dimension. this is only needed if the padding is 'valid'.
@@ -211,11 +211,11 @@ class bridge_residual_conv2D_block(layers.Layer):                  # this block 
 		
 		self.conv_bn = conv2d_block(num_filters, kernel=kernel, kernel_initializer=kernel_initializer, strides=strides, padding=padding, use_bn=use_bn)
 		
-		self.conv_wobn = layers.Conv2D(filters=num_filters, kernel=kernel_size, kernel_initializer=kernel_initializer, strides=strides, padding=padding)
+		self.conv_wobn = layers.Conv2D(filters=num_filters, kernel_size = kernel, kernel_initializer=kernel_initializer, strides=strides, padding=padding)
 		
 		# a 1x1 conv layer for the skip connection to reduce the number of channels so it can be added back to the main flow
 		
-		self.conv_skip = layers.Conv2D(filters=num_filters, kernel = 1, kernel_initializer=kernel_initializer)
+		self.conv_skip = layers.Conv2D(filters=num_filters, kernel_size = 1, kernel_initializer=kernel_initializer)
 		
 		# optional pooling to be applied to the skipped connection to ensure that the tensors to be added have 
 		# equal dimension. this is only needed if the padding is 'valid'.
@@ -408,7 +408,7 @@ class bridge_residual_conv2Dtrans_block(layers.Layer):			# this block is to be u
 		
 		# a 1x1 conv layer for the skip connection to reduce the number of channels so it can be added back to the main flow
 		
-		self.convtrans_skip = layers.Conv2DTranspose(filters=num_filters, kernel = 1, kernel_initializer=kernel_initializer)
+		self.convtrans_skip = layers.Conv2DTranspose(filters=num_filters, kernel_size = 1, kernel_initializer=kernel_initializer)
 		
 		# optional zero padding to be applied to the skipped connection to ensure that the tensors to be added have 
 		# equal dimension. this is only needed if the padding is 'valid'.
