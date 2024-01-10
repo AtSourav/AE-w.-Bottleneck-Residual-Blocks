@@ -177,8 +177,6 @@ class bottleneck_residual_conv2Dtrans_block(layers.Layer):
 		
 		# we are defining this with a fixed stride length of 1.
 		
-		# pooling can be 'min', 'max', or 'avg'.
-		
 		# compress_ratio is the ratio by which we compress using the first 1x1 conv layer.
 		# using a compress_ratio of less than 1 will create an inverted residual block.
 		
@@ -194,7 +192,7 @@ class bottleneck_residual_conv2Dtrans_block(layers.Layer):
 		# third conv2dtrans layer with 1x1 kernel to restore the number of channels. No activation after this one.
 		self.conv3trans = layers.Conv2DTranspose(filters=num_filters, kernel_size=1, kernel_initializer=kernel_initializer)
 		
-		# optional min pooling to be applied to the skipped connection to ensure that the tensors to be added have 
+		# optional zero padding to be applied to the skipped connection to ensure that the tensors to be added have 
 		# equal dimension. this is only needed if the padding is 'valid'.
 		
 		p = (kernel - 1)//2
