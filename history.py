@@ -10,7 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def plot_history(num_sessions, metrics):
+def plot_history(num_sessions, metrics=['loss', 'val_loss']):
 		
 		# num_sessions is the number of separate training sessions, should be <= 5
 		# metrics are the quantities to be plotted, such as 'loss', 'val_loss', etc, these should be a list of strings
