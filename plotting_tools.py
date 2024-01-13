@@ -8,6 +8,7 @@ Module for plotting functions that I often use in my notebooks on CNN based arch
 
 import numpy as np
 import matplotlib.pyplot as plt
+import tensorflow as tf
 
 
 def plot_dataset_images(img_set,fig_size,rows,columns,axis_arg='off'):
