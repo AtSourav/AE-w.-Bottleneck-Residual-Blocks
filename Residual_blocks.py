@@ -315,7 +315,7 @@ class residual_conv2Dtrans_block(layers.Layer):
 		
 		super().__init__()
 		
-		self.convtrans_bn = conv2dtrans_block(num_filters, kernel=kernel, kernel_initializer=kernel_initializer, use_bn=use_bn)
+		self.convtrans_bn = conv2dtrans_block(num_filters, kernel=kernel, kernel_initializer=kernel_initializer, padding = padding, use_bn=use_bn)
 		
 		self.convtrans_wobn = layers.Conv2DTranspose(filters=num_filters, kernel_size=kernel, kernel_initializer=kernel_initializer, padding=padding)
 		
@@ -402,7 +402,7 @@ class bridge_residual_conv2Dtrans_block(layers.Layer):			# this block is to be u
 		
 		super().__init__()
 		
-		self.convtrans_bn = conv2dtrans_block(num_filters, kernel=kernel, kernel_initializer=kernel_initializer, use_bn=use_bn)
+		self.convtrans_bn = conv2dtrans_block(num_filters, kernel=kernel, kernel_initializer=kernel_initializer, padding = padding, use_bn=use_bn)
 		
 		self.convtrans_wobn = layers.Conv2DTranspose(filters=num_filters, kernel_size=kernel, kernel_initializer=kernel_initializer, padding=padding)
 		
