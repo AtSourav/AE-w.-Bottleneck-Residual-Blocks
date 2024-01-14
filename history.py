@@ -20,7 +20,7 @@ def plot_history(num_sessions, metrics=['loss', 'val_loss']):
 			plt.plot(history.history[metric])
 		elif num_sessions == 2:
 			plt.plot(history.history[metric]+history2.history[metric])
-		elif num_sesions == 3:
+		elif num_sessions == 3:
 			plt.plot(history.history[metric]+history2.history[metric]+history3.history[metric])
 		elif num_sessions == 4:
 			plt.plot(history.history[metric]+history2.history[metric]+history3.history[metric]+history4.history[metric])
