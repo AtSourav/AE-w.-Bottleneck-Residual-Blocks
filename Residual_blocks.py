@@ -26,11 +26,11 @@ from keras import layers
 
 class conv2d_block(layers.Layer):     # it's not the most general conv2d layer we could use.
 
-	def __init__(self, num_filters, kernel, kernel_initializer, strides= (1,1), padding='valid', use_bn='True'):
+	def __init__(self, num_filters, kernel, kernel_initializer, strides= (1,1), padding='valid', use_bn='True', kernel_regularizer=None):
 		super().__init__()
 		
 		self.conv2d = layers.Conv2D(filters=num_filters, kernel_size=kernel, strides=strides, 
-								padding=padding, kernel_initializer=kernel_initializer)
+								padding=padding, kernel_initializer=kernel_initializer, kernel_regularizer=kernel_regularizer)
 								
 		self.batchnorm = layers.BatchNormalization(axis=-1)
 		
@@ -52,11 +52,11 @@ class conv2d_block(layers.Layer):     # it's not the most general conv2d layer w
 		
 class conv2dtrans_block(layers.Layer):    
 
-	def __init__(self, num_filters, kernel, kernel_initializer, strides= (1,1), padding='valid', use_bn='True'):
+	def __init__(self, num_filters, kernel, kernel_initializer, strides= (1,1), padding='valid', use_bn='True', kernel_regularizer=None):
 		super().__init__()
 		
 		self.conv2dtrans = layers.Conv2DTranspose(filters=num_filters, kernel_size=kernel, strides=strides, 
-								padding=padding, kernel_initializer=kernel_initializer)
+								padding=padding, kernel_initializer=kernel_initializer, kernel_regularizer=kernel_regularizer)
 								
 		self.batchnorm = layers.BatchNormalization(axis=-1)
 		
@@ -98,7 +98,7 @@ class min_pool2D(layers.Layer):
 		
 class residual_conv2D_block(layers.Layer):
 
-	def __init__(self, num_filters, num_layers, kernel, kernel_initializer, pooling, strides=(1,1), padding='valid', use_bn='True'):
+	def __init__(self, num_filters, num_layers, kernel, kernel_initializer, pooling, strides=(1,1), padding='valid', use_bn='True', kernel_regularizer=None):
 	
 		# num_filters should be the same as the number of channels in the output of the previous layer, otherwise addition with the 
 		# skipped connection won't be possible.
@@ -109,9 +109,10 @@ class residual_conv2D_block(layers.Layer):
 		
 		super().__init__()
 		
-		self.conv_bn = conv2d_block(num_filters, kernel=kernel, kernel_initializer=kernel_initializer, strides=strides, padding=padding, use_bn=use_bn)
+		self.conv_bn = conv2d_block(num_filters, kernel=kernel, kernel_initializer=kernel_initializer, strides=strides, padding=padding, use_bn=use_bn, kernel_regularizer=kernel_regularizer)
 		
-		self.conv_wobn = layers.Conv2D(filters=num_filters, kernel_size = kernel, kernel_initializer=kernel_initializer, strides=strides, padding=padding)
+		self.conv_wobn = layers.Conv2D(filters=num_filters, kernel_size = kernel, kernel_initializer=kernel_initializer, strides=strides, padding=padding,
+																	 kernel_regularizer=kernel_regularizer)
 		
 		# optional pooling to be applied to the skipped connection to ensure that the tensors to be added have 
 		# equal dimension. this is only needed if the padding is 'valid'.
@@ -198,7 +199,7 @@ class residual_conv2D_block(layers.Layer):
 class bridge_residual_conv2D_block(layers.Layer):                  # this block is to be used while changing the number of channels.
 										# we shall add a unit convolution to the skipped connection to change the number of channels
 
-	def __init__(self, num_filters, num_layers, kernel, kernel_initializer, pooling, strides=(1,1), padding='valid', use_bn='True'):
+	def __init__(self, num_filters, num_layers, kernel, kernel_initializer, pooling, strides=(1,1), padding='valid', use_bn='True', kernel_regularizer=None):
 	
 		# num_filters should be the same as the number of channels in the output of the previous layer, otherwise addition with the 
 		# skipped connection won't be possible.
@@ -209,13 +210,14 @@ class bridge_residual_conv2D_block(layers.Layer):                  # this block 
 		
 		super().__init__()
 		
-		self.conv_bn = conv2d_block(num_filters, kernel=kernel, kernel_initializer=kernel_initializer, strides=strides, padding=padding, use_bn=use_bn)
+		self.conv_bn = conv2d_block(num_filters, kernel=kernel, kernel_initializer=kernel_initializer, strides=strides, padding=padding, use_bn=use_bn, kernel_regularizer=kernel_regularizer)
 		
-		self.conv_wobn = layers.Conv2D(filters=num_filters, kernel_size = kernel, kernel_initializer=kernel_initializer, strides=strides, padding=padding)
+		self.conv_wobn = layers.Conv2D(filters=num_filters, kernel_size = kernel, kernel_initializer=kernel_initializer, strides=strides, padding=padding,
+																				kernel_regularizer=kernel_regularizer)
 		
 		# a 1x1 conv layer for the skip connection to reduce the number of channels so it can be added back to the main flow
 		
-		self.conv_skip = layers.Conv2D(filters=num_filters, kernel_size = 1, kernel_initializer=kernel_initializer)
+		self.conv_skip = layers.Conv2D(filters=num_filters, kernel_size = 1, kernel_initializer=kernel_initializer)     # no regularization on this one
 		
 		# optional pooling to be applied to the skipped connection to ensure that the tensors to be added have 
 		# equal dimension. this is only needed if the padding is 'valid'.
@@ -304,7 +306,7 @@ class bridge_residual_conv2D_block(layers.Layer):                  # this block 
 		
 class residual_conv2Dtrans_block(layers.Layer):
 
-	def __init__(self, num_filters, num_layers, kernel, kernel_initializer, padding='valid', use_bn='True'):
+	def __init__(self, num_filters, num_layers, kernel, kernel_initializer, padding='valid', use_bn='True', kernel_regularizer=None):
 	
 		# num_filters should be the same as the number of channels in the output of the previous layer, otherwise addition with the 
 		# skipped connection won't be possible.
@@ -315,9 +317,9 @@ class residual_conv2Dtrans_block(layers.Layer):
 		
 		super().__init__()
 		
-		self.convtrans_bn = conv2dtrans_block(num_filters, kernel=kernel, kernel_initializer=kernel_initializer, padding = padding, use_bn=use_bn)
+		self.convtrans_bn = conv2dtrans_block(num_filters, kernel=kernel, kernel_initializer=kernel_initializer, padding = padding, use_bn=use_bn, kernel_regularizer=kernel_regularizer)
 		
-		self.convtrans_wobn = layers.Conv2DTranspose(filters=num_filters, kernel_size=kernel, kernel_initializer=kernel_initializer, padding=padding)
+		self.convtrans_wobn = layers.Conv2DTranspose(filters=num_filters, kernel_size=kernel, kernel_initializer=kernel_initializer, padding=padding, kernel_regularizer=kernel_regularizer)
 		
 		# optional zero padding to be applied to the skipped connection to ensure that the tensors to be added have 
 		# equal dimension. this is only needed if the padding is 'valid'.
@@ -391,7 +393,7 @@ class bridge_residual_conv2Dtrans_block(layers.Layer):			# this block is to be u
 										# we shall add a unit convolution to the skipped connection to change the number of channels
 
 
-	def __init__(self, num_filters, num_layers, kernel, kernel_initializer, padding='valid', use_bn='True'):
+	def __init__(self, num_filters, num_layers, kernel, kernel_initializer, padding='valid', use_bn='True', kernel_regularizer=None):
 	
 		# num_filters should be the same as the number of channels in the output of the previous layer, otherwise addition with the 
 		# skipped connection won't be possible.
@@ -402,13 +404,14 @@ class bridge_residual_conv2Dtrans_block(layers.Layer):			# this block is to be u
 		
 		super().__init__()
 		
-		self.convtrans_bn = conv2dtrans_block(num_filters, kernel=kernel, kernel_initializer=kernel_initializer, padding = padding, use_bn=use_bn)
+		self.convtrans_bn = conv2dtrans_block(num_filters, kernel=kernel, kernel_initializer=kernel_initializer, padding = padding, use_bn=use_bn, kernel_regularizer=kernel_regularizer)
 		
-		self.convtrans_wobn = layers.Conv2DTranspose(filters=num_filters, kernel_size=kernel, kernel_initializer=kernel_initializer, padding=padding)
+		self.convtrans_wobn = layers.Conv2DTranspose(filters=num_filters, kernel_size=kernel, kernel_initializer=kernel_initializer, padding=padding,
+																			kernel_regularizer=kernel_regularizer)
 		
 		# a 1x1 conv layer for the skip connection to reduce the number of channels so it can be added back to the main flow
 		
-		self.convtrans_skip = layers.Conv2DTranspose(filters=num_filters, kernel_size = 1, kernel_initializer=kernel_initializer)
+		self.convtrans_skip = layers.Conv2DTranspose(filters=num_filters, kernel_size = 1, kernel_initializer=kernel_initializer)     # no regularization on this one
 		
 		# optional zero padding to be applied to the skipped connection to ensure that the tensors to be added have 
 		# equal dimension. this is only needed if the padding is 'valid'.
