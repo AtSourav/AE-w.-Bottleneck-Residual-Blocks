@@ -1,9 +1,7 @@
 """
 @author: sourav
-"""
 
-"""
-Module for the Bottleneck Residual Blocks and associated layers. Written in keras.
+Module for the Residual Blocks and associated layers. Written in keras.
 
 We shall use keras functional API (instead of using Sequential).
 
