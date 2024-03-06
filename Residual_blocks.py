@@ -24,7 +24,7 @@ from keras import layers
 
 class conv2d_block(layers.Layer):     # it's not the most general conv2d layer we could use.
 
-	def __init__(self, num_filters, kernel, kernel_initializer, strides= (1,1), padding='valid', use_bn='True', kernel_regularizer=None):
+	def __init__(self, num_filters, kernel, kernel_initializer, strides= (1,1), padding='valid', use_bn='True', kernel_regularizer=None, *args, **kwargs):
 		super().__init__()
 		
 		self.conv2d = layers.Conv2D(filters=num_filters, kernel_size=kernel, strides=strides, 
@@ -50,7 +50,7 @@ class conv2d_block(layers.Layer):     # it's not the most general conv2d layer w
 		
 class conv2dtrans_block(layers.Layer):    
 
-	def __init__(self, num_filters, kernel, kernel_initializer, strides= (1,1), padding='valid', use_bn='True', kernel_regularizer=None):
+	def __init__(self, num_filters, kernel, kernel_initializer, strides= (1,1), padding='valid', use_bn='True', kernel_regularizer=None, *args, **kwargs):
 		super().__init__()
 		
 		self.conv2dtrans = layers.Conv2DTranspose(filters=num_filters, kernel_size=kernel, strides=strides, 
@@ -76,7 +76,7 @@ class conv2dtrans_block(layers.Layer):
 		
 class min_pool2D(layers.Layer):
 	
-	def __init__(self, pool_size, strides=(1,1), padding='valid'):
+	def __init__(self, pool_size, strides=(1,1), padding='valid', *args, **kwargs):
 		super().__init__()
 		
 		self.maxpool = layers.MaxPooling2D(pool_size=pool_size, strides=strides, padding=padding)
@@ -96,7 +96,7 @@ class min_pool2D(layers.Layer):
 		
 class residual_conv2D_block(layers.Layer):
 
-	def __init__(self, num_filters, num_layers, kernel, kernel_initializer, pooling, strides=(1,1), padding='valid', use_bn='True', kernel_regularizer=None):
+	def __init__(self, num_filters, num_layers, kernel, kernel_initializer, pooling, strides=(1,1), padding='valid', use_bn='True', kernel_regularizer=None, *args, **kwargs):
 	
 		# num_filters should be the same as the number of channels in the output of the previous layer, otherwise addition with the 
 		# skipped connection won't be possible.
@@ -197,7 +197,7 @@ class residual_conv2D_block(layers.Layer):
 class bridge_residual_conv2D_block(layers.Layer):                  # this block is to be used while changing the number of channels.
 										# we shall add a unit convolution to the skipped connection to change the number of channels
 
-	def __init__(self, num_filters, num_layers, kernel, kernel_initializer, pooling, strides=(1,1), padding='valid', use_bn='True', kernel_regularizer=None):
+	def __init__(self, num_filters, num_layers, kernel, kernel_initializer, pooling, strides=(1,1), padding='valid', use_bn='True', kernel_regularizer=None, *args, **kwargs):
 	
 		# num_filters should be the same as the number of channels in the output of the previous layer, otherwise addition with the 
 		# skipped connection won't be possible.
@@ -304,7 +304,7 @@ class bridge_residual_conv2D_block(layers.Layer):                  # this block 
 		
 class residual_conv2Dtrans_block(layers.Layer):
 
-	def __init__(self, num_filters, num_layers, kernel, kernel_initializer, padding='valid', use_bn='True', kernel_regularizer=None):
+	def __init__(self, num_filters, num_layers, kernel, kernel_initializer, padding='valid', use_bn='True', kernel_regularizer=None, *args, **kwargs):
 	
 		# num_filters should be the same as the number of channels in the output of the previous layer, otherwise addition with the 
 		# skipped connection won't be possible.
@@ -391,7 +391,7 @@ class bridge_residual_conv2Dtrans_block(layers.Layer):			# this block is to be u
 										# we shall add a unit convolution to the skipped connection to change the number of channels
 
 
-	def __init__(self, num_filters, num_layers, kernel, kernel_initializer, padding='valid', use_bn='True', kernel_regularizer=None):
+	def __init__(self, num_filters, num_layers, kernel, kernel_initializer, padding='valid', use_bn='True', kernel_regularizer=None, *args, **kwargs):
 	
 		# num_filters should be the same as the number of channels in the output of the previous layer, otherwise addition with the 
 		# skipped connection won't be possible.
