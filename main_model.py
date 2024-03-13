@@ -4,7 +4,10 @@
 We define the main models as classes. 
 """
 
-
+# when custom layers/models are built in keras by subclassing, we cannot infer input.output 
+# before the model any real data is passed into the model.
+# This is different from when the models are defined using the Functional API or using Sequential.
+# Don't understand the inner details, but apparently, this is the case. 
 
 import numpy as np
 import tensorflow as tf
