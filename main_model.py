@@ -19,9 +19,9 @@ from Residual_blocks2 import *
 
 
 
-class Encoder(Model):
+class Encoder(Layer):
     '''
-    Returns an Encoder as a Model object. The encoder is composed of convolutional residual blocks and 
+    Returns an Encoder as a Layer object. The encoder is composed of convolutional residual blocks and 
     a few dense layers on top. 
     --Add the architecture.  
     '''
@@ -81,25 +81,41 @@ class Encoder(Model):
 ##############################################################################################
     
 
+class Sampling(Layer):
+
+    def __init__(self, seed):
+        super().__init__()
+
+        self.seed = seed
+
+
+    def call(self, arg):
+        z_m, z_log_v = arg
+        batch = tf.shape(z_m)[0]
+        dim = tf.shape(z_m)[1]
+        eps = tf.random.normal(shape=(batch,dim), seed=self.seed)
+        return z_m + tf.exp(0.5*z_log_v)*eps
+
+    
+
 class Encoder_VAE(Encoder):
     '''
     Encoder for a VAE, subclassed from the encoder for an AE.
     '''
 
-    def __init__(self, initializer, latent_dim, *args, **kwargs):
+    def __init__(self, initializer, latent_dim, seed, *args, **kwargs):
         super().__init__(initializer, latent_dim)
         # repeating the arguments can be avoided by the use of *args **kwargs in both __init
         # and super().__init__ 
 
-        self.z_mean = layers.Dense(latent_dim, name='z_mean')
-        self.z_log_var = layers.Dense(latent_dim, name='z_log_var')
+        self.latent_dim = latent_dim
+        self.seed = seed
 
-    def sampling(arg):
-        z_m, z_log_v = arg
-        batch = tf.shape(z_m)[0]
-        dim = tf.shape(z_m)[1]
-        eps = tf.random.normal(shape=(batch,dim))
-        return z_m + tf.exp(0.5*z_log_v)*eps
+    def build(self,input_shape):
+
+        self.z_mean = layers.Dense(self.latent_dim, name='z_mean')
+        self.z_log_var = layers.Dense(self.latent_dim, name='z_log_var')
+        self.sampling = Sampling(self.seed)
     
     def call(self, input): 
 
@@ -108,7 +124,8 @@ class Encoder_VAE(Encoder):
             x = layer(x)
         z_m = self.z_mean(x)
         z_lv = self.z_log_var(x)
-        z = layers.Lambda(self.sampling)([z_m, z_lv])
+
+        z = self.sampling([z_m, z_lv])
 
         return [z_m, z_lv, z]
 
@@ -117,9 +134,9 @@ class Encoder_VAE(Encoder):
 ################################################################################################
     
 
-class Decoder(Model):
+class Decoder(Layer):
     '''
-    Returns a Decoder as a Model object. The decoder is composed of convolutional residual blocks and 
+    Returns a Decoder as a Layer object. The decoder is composed of convolutional residual blocks and 
     a few dense layers on top. 
     --Add the architecture.  
     '''
@@ -212,9 +229,9 @@ class Decoder_VAE(Decoder):
         for layer in self.layers_list:
             x = layer(x)
 
-        out = self.output(x)
+        img_out = self.img_out(x)
 
-        return out
+        return img_out
     
 
 
@@ -252,10 +269,10 @@ class VAE(Model):
     Returns a VAE subclassed from the Model class, composed of Encoder_VAE and Decoder_VAE.
     '''
 
-    def __init__(self,initializer, latent_dim, *args, **kwargs):
+    def __init__(self,initializer, latent_dim, seed, *args, **kwargs):
         super().__init__()
 
-        self.encoder = Encoder_VAE(initializer, latent_dim)
+        self.encoder = Encoder_VAE(initializer, latent_dim, seed)
         self.decoder = Decoder_VAE(initializer, latent_dim)
 
     def call(self, input):
