@@ -11,6 +11,7 @@ so it's suitable to use on cifar10.
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
+import keras.backend as K
 
 from keras.applications.resnet_v2 import ResNet50V2
 
@@ -35,7 +36,9 @@ class feature_model():
     '''
 
 
-    def __init__(self, map_layers, inp_shape, inp_tensor):
+    def __init__(self, map_layers, inp_tensor):
+
+        inp_shape = K.int_shape(inp_tensor)[1:]     # the inp_tensor will be of the shape (batch, H, W, C)
 
         base_model = ResNet50V2(include_top=False, weights='imagenet', input_shape=inp_shape)
         base_model.trainable = False
