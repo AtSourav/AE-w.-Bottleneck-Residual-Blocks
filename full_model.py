@@ -12,7 +12,6 @@ from keras import layers
 
 from feature_model import *
 from main_model import *
-from Residual_blocks import *
 
 
 class AE_perceptual():
@@ -24,7 +23,6 @@ class AE_perceptual():
     '''
 
     def __init__(self, inp_shape, map_layers, initializer, latent_dim, *args, **kwargs):
-        super().__init__()
 
         full_model_input = keras.Input(shape=inp_shape)
 
