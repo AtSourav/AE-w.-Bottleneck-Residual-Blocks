@@ -198,7 +198,7 @@ class Decoder(Model):
                     residual_conv2D_block(32, 1, 2, initializer, 'min', name='res_25')
         ]
 
-        self.output = layers.Conv2D(3, 1, activation='sigmoid', padding='valid', kernel_initializer=initializer, name='output')
+        self.img_out = layers.Conv2D(3, 1, activation='sigmoid', padding='valid', kernel_initializer=initializer, name='img_out')
 
     def call(self, latent_input):
 
@@ -206,9 +206,9 @@ class Decoder(Model):
         for layer in self.layers_list:
             x = layer(x)
         
-        out = self.output(x)
+        img_out = self.img_out(x)
 
-        return out
+        return img_out
     
 
 #########################################################################################################################
