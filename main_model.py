@@ -11,15 +11,17 @@ import tensorflow as tf
 from tensorflow import keras
 from keras import initializers
 from keras import layers
+from keras.layers import Layer
 from keras.models import Model
 
-from Residual_blocks import *
+# from Residual_blocks import *
+from Residual_blocks2 import *
 
 
 
 class Encoder(Model):
     '''
-    Returns an Encoder as a Model object. The encoder is composed of convolutional residual blocks and 
+    Returns an Encoder as a Layer object. The encoder is composed of convolutional residual blocks and 
     a few dense layers on top. 
     --Add the architecture.  
     '''
@@ -27,50 +29,68 @@ class Encoder(Model):
     def __init__(self, initializer, latent_dim, *args, **kwargs):
         super().__init__()
 
-        self.layers = [bridge_residual_conv2D_block(64, 2, 3, initializer, 'min', name='bres_1'),
+        self.initializer = initializer
+        self.latent_dim = latent_dim
+
+    #def build(self, input_shape):
+
+        self.bres_1 = bridge_residual_conv2D_block(64, 2, 3, self.initializer, 'min', name='bres_1')
                            
-                    bridge_residual_conv2D_block(128, 2, 3, initializer, 'min', name='bres_2'),
+        self.bres_2 = bridge_residual_conv2D_block(128, 2, 3, self.initializer, 'min', name='bres_2')
 
-                    residual_conv2D_block(128, 2, 3, initializer, 'min', padding = 'same', name='res_3'),
+        self.res_3 = residual_conv2D_block(128, 2, 3, self.initializer, 'min', padding = 'same', name='res_3')
 
-                    residual_conv2D_block(128, 1, 1, initializer, 'min', name='res_4'),
+        self.res_4 = residual_conv2D_block(128, 1, 1, self.initializer, 'min', name='res_4')
         
-                    layers.MaxPooling2D(pool_size=(2, 2), strides=None, padding="valid", name='pool_5'),
+        self.pool_5 = layers.MaxPooling2D(pool_size=(2, 2), strides=None, padding="valid", name='pool_5')
 
-                    bridge_residual_conv2D_block(256, 2, 3, initializer, 'min', name='bres_6'),
+        self.bres_6 = bridge_residual_conv2D_block(256, 2, 3, self.initializer, 'min', name='bres_6')
 
-                    residual_conv2D_block(256, 1, 1, initializer, 'min', name='res_7'),
+        self.res_7 = residual_conv2D_block(256, 1, 1, self.initializer, 'min', name='res_7')
 
-                    residual_conv2D_block(256, 2, 3, initializer, 'min', padding = 'same', name='res_8'),
+        self.res_8 = residual_conv2D_block(256, 2, 3, self.initializer, 'min', padding = 'same', name='res_8')
 
-                    residual_conv2D_block(256, 1, 1, initializer, 'min', name='res_9'),
+        self.res_9 = residual_conv2D_block(256, 1, 1, self.initializer, 'min', name='res_9')
 
-                    layers.MaxPooling2D(pool_size=(2, 2), strides=None, padding="valid", name='pool_10'),
+        self.pool_10 = layers.MaxPooling2D(pool_size=(2, 2), strides=None, padding="valid", name='pool_10')
 
-                    bridge_residual_conv2D_block(512, 2, 3, initializer, 'min', padding = 'same', name='bres_11'),
+        self.bres_11 = bridge_residual_conv2D_block(512, 2, 3, self.initializer, 'min', padding = 'same', name='bres_11')
 
-                    residual_conv2D_block(512, 1, 1, initializer, 'min', name='res_12'),
+        self.res_12 = residual_conv2D_block(512, 1, 1, self.initializer, 'min', name='res_12')
 
-                    residual_conv2D_block(512, 2, 3, initializer, 'min', padding = 'same', name='res_13'),
+        self.res_13 = residual_conv2D_block(512, 2, 3, self.initializer, 'min', padding = 'same', name='res_13')
 
-                    residual_conv2D_block(512, 1, 1, initializer, 'min', name='res_14'),
+        self.res_14 = residual_conv2D_block(512, 1, 1, self.initializer, 'min', name='res_14')
 
-                    layers.Flatten(name='flatten'),
+        self.flatten = layers.Flatten(name='flatten')
 
-                    layers.Dense(2*latent_dim, name='dense_15'),
+        self.dense_15 = layers.Dense(2*self.latent_dim, name='dense_15')
 
-                    layers.ReLU(name='relu_16')
+        self.relu_16 = layers.ReLU(name='relu_16')
                     
-        ]
+        self.z_out = layers.Dense(self.latent_dim, name="z_out")
 
-        self.z_out = layers.Dense(latent_dim, name="z_out")
+    
+    def call(self, inputs):
 
-    def call(self, input):
-
-        x = input
-        for layer in self.layers:
-            x = layer(x)
-
+        x = self.bres_1(inputs)
+        x = self.bres_2(x)
+        x = self.res_3(x)
+        x = self.res_4(x)
+        x = self.pool_5(x)
+        x = self.bres_6(x)
+        x = self.res_7(x)
+        x = self.res_8(x)
+        x = self.res_9(x)
+        x = self.pool_10(x)
+        x = self.bres_11(x)
+        x = self.res_12(x)
+        x = self.res_13(x)
+        x = self.res_14(x)
+        x = self.flatten(x)
+        x = self.dense_15(x)
+        x = self.relu_16(x)
+        
         z_out = self.z_out(x)
 
         return z_out
@@ -102,7 +122,7 @@ class Encoder_VAE(Encoder):
     def call(self, input): 
 
         x = input
-        for layer in self.layers:
+        for layer in self.layers_list:
             x = layer(x)
         z_m = self.z_mean(x)
         z_lv = self.z_log_var(x)
@@ -125,7 +145,7 @@ class Decoder(Model):
     def __init__(self, initializer, latent_dim, *args, **kwargs):
         super().__init__()
 
-        self.layers = [layers.Dense(2*latent_dim, name='dense_1'), 
+        self.layers_list = [layers.Dense(2*latent_dim, name='dense_1'), 
                     
                     layers.ReLU(name='relu_2'),
 
@@ -183,7 +203,7 @@ class Decoder(Model):
     def call(self, latent_input):
 
         x = latent_input
-        for layer in self.layers:
+        for layer in self.layers_list:
             x = layer(x)
         
         out = self.output(x)
@@ -202,12 +222,12 @@ class Decoder_VAE(Decoder):
     '''
 
     def __init__(self, initializer, latent_dim, *args, **kwargs):
-        super.__init__(initializer, latent_dim)
+        super().__init__(initializer, latent_dim)
 
     def call(self, latent_inp):
 
         x = latent_inp
-        for layer in self.layers:
+        for layer in self.layers_list:
             x = layer(x)
 
         out = self.output(x)
@@ -227,7 +247,7 @@ class AE(Model):
     '''
 
     def __init__(self, initializer, latent_dim, *args, **kwargs):
-        super.__init__()
+        super().__init__()
 
         self.encoder = Encoder(initializer, latent_dim)
         self.decoder = Decoder(initializer, latent_dim)
