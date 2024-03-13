@@ -116,6 +116,8 @@ class Encoder_VAE(Encoder):
         self.z_mean = layers.Dense(self.latent_dim, name='z_mean')
         self.z_log_var = layers.Dense(self.latent_dim, name='z_log_var')
         self.sampling = Sampling(self.seed)
+        super(Encoder_VAE, self).build(input_shape)         # to build automatically when the class is instantiated?
+                                                            # so we do not have to call the build() method?
     
     def call(self, input): 
 

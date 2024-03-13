@@ -64,6 +64,7 @@ class conv2d_block(layers.Layer):     # it's not the most general conv2d layer w
 		self.relu = layers.ReLU()
 								
 		self.use_bn = self.use_bn
+		super(conv2d_block, self).build(input_shape)
 								
 	
 	def call(self,x):
@@ -113,7 +114,8 @@ class conv2dtrans_block(layers.Layer):
 		
 		self.relu = layers.ReLU()
 		
-		self.use_bn = self.use_bn	
+		self.use_bn = self.use_bn
+		super(conv2dtrans_block, self).build(input_shape)	
 							
 	
 	def call(self,x):
@@ -138,6 +140,7 @@ class min_pool2D(layers.Layer):
 	def build(self, input_shape):
 		
 		self.maxpool = layers.MaxPooling2D(pool_size=self.pool_size, strides=self.strides, padding=self.padding)
+		super(min_pool2D, self).build(input_shape)
 	
 	def call(self,x):
 		x_int = -x
@@ -216,6 +219,7 @@ class residual_conv2D_block(layers.Layer):
 		
 		self.add = layers.Add()
 		self.relu = layers.ReLU()
+		super(residual_conv2D_block, self).build(input_shape)
 		
 		
 	def call(self,x):
@@ -351,6 +355,7 @@ class bridge_residual_conv2D_block(layers.Layer):                  # this block 
 		
 		self.add = layers.Add()
 		self.relu = layers.ReLU()
+		super(bridge_residual_conv2D_block, self).build(input_shape)
 		
 	def call(self,x):
 		
@@ -475,6 +480,7 @@ class residual_conv2Dtrans_block(layers.Layer):
 		self.add = layers.Add()
 		self.relu = layers.ReLU()
 		self.batchnorm = layers.BatchNormalization(axis=-1)
+		super(residual_conv2Dtrans_block, self).build(input_shape)
 		
 		
 	def call(self,x):
@@ -591,6 +597,7 @@ class bridge_residual_conv2Dtrans_block(layers.Layer):			# this block is to be u
 		self.add = layers.Add()
 		self.relu = layers.ReLU()
 		self.batchnorm = layers.BatchNormalization(axis=-1)
+		super(bridge_residual_conv2Dtrans_block, self).build(input_shape)
 		
 		
 	def call(self,x):
