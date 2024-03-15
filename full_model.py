@@ -20,20 +20,90 @@ class AE_perceptual():
     perceptual losses. The outputs are both the reconstructed image from the autoencoder
     and the feature maps obtained from applying the feature model on the reconstructions.
     -- Add the architecture.
+
+    Attributes:
+    -- AE: an instance of the Autoencoder based on residual blocks defined in the main_model module.
+    -- feature_model: an instance of the feature_model class that provides the pre-trained ResNet50V2 
+                        model used for calculating the feature losses as an attribute. Refer to the 
+                        feature_model module.
+    -- full_model: a composition of the AE and the pre-trained ResNet50V2 to calculate feature maps.
+    -- output: output of the full_model. It is a list of feature maps and the reconstructed image (last).
+
+    Methods:
+    --summarise(show_trainable): provides a model summary of the full model with the number of 
+                                    trainable and non-trainable parameters.  
     '''
 
-    def __init__(self, inp_shape, map_layers, initializer, latent_dim, *args, **kwargs):
+    def __init__(self, inp_shape, num_feature_maps, initializer, latent_dim, *args, **kwargs):
 
-        full_model_input = keras.Input(shape=inp_shape)
+        inputs = keras.Input(shape=inp_shape)
 
         self.AE = AE(initializer, latent_dim)
 
-        feature_model_input = self.AE(full_model_input)
+        AE_out = self.AE(inputs)
 
-        self.feature_model = feature_model(map_layers, feature_model_input).f_model
+        self.feature_model = feature_model(inp_shape, num_feature_maps).f_model
 
-        feature_maps = self.feature_model(feature_model_input)
-        full_model_output = [feature_model_input] + feature_maps
+        feature_maps = self.feature_model(AE_out)
+        reconstruction = self.AE.output
+        feature_maps.append(reconstruction)   # appending the reconstruction to the feature maps list
+                                                                    # produced by the feature model
+        
 
-        self.full_model = keras.Model(full_model_input, full_model_output, name='full_model')
+        self.full_model = keras.Model(self.AE.input, feature_maps, name='full_model')
+        self.output = self.full_model.output
+
+    def summarise(self):
+        self.full_model.summary()
+
+
+
+
+
+
+class VAE_perceptual():
+    '''
+    Has an attribute that is a variational autoencoder combined with a perceptual model 
+    (ResNet50V2) to calculate perceptual losses. The outputs are both the reconstructed 
+    image from the autoencoder and the feature maps obtained from applying the feature 
+    model on the reconstructions.
+    -- Add the architecture.
+
+    Attributes:
+    -- VAE: an instance of the VAE based on residual blocks defined in the main_model 
+            module.
+    -- feature_model: an instance of the feature_model class that provides the pre-trained 
+                        ResNet50V2 model used for calculating the feature losses as an 
+                        attribute. Refer to the feature_model module.
+    -- full_model: a composition of the VAE and the pre-trained ResNet50V2 to calculate 
+                    feature maps.
+    -- output: output of the full_model. It is a list of feature maps and the generated 
+                image (last).
+
+    Methods:
+    --summarise(): provides a model summary of the full model with the number of trainable 
+                    and non-trainable parameters.  
+    '''
+
+    def __init__(self, inp_shape, num_feature_maps, initializer, latent_dim, seed, *args, **kwargs):
+
+        inputs = keras.Input(shape=inp_shape)
+
+        self.VAE = VAE(initializer, latent_dim, seed)
+
+        VAE_out = self.VAE(inputs)
+
+        self.feature_model = feature_model(inp_shape, num_feature_maps).f_model
+
+        feature_maps = self.feature_model(VAE_out)
+        img_generated = self.VAE.output
+        feature_maps.append(img_generated)   # appending the reconstruction to the feature maps list
+                                                                    # produced by the feature model
+        
+
+        self.full_model = keras.Model(self.VAE.input, feature_maps, name='full_model')
+        self.output = self.full_model.output
+
+    def summarise(self):
+        self.full_model.summary()
 
