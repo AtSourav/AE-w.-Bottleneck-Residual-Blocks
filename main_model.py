@@ -29,10 +29,15 @@ class Encoder(Layer):
     --Add the architecture.  
     '''
 
-    def __init__(self, initializer, latent_dim, *args, **kwargs):
+    def __init__(self, initializer, latent_dim, inp_shape=(32,32,3), *args, **kwargs):
+        '''
+        The input shape should be either (32,32,3), which is the default, or (96,96,3).
+        '''
         super().__init__()
 
-        self.layers_list = [bridge_residual_conv2D_block(64, 2, 3, initializer, 'min', name='bres_1'),
+        self.inp_shape = inp_shape
+
+        self.layers_list_p1 = [bridge_residual_conv2D_block(64, 2, 3, initializer, 'min', name='bres_1'),
                            
                     bridge_residual_conv2D_block(128, 2, 3, initializer, 'min', name='bres_2'),
 
@@ -58,22 +63,41 @@ class Encoder(Layer):
 
                     residual_conv2D_block(512, 2, 3, initializer, 'min', padding = 'same', name='res_13'),
 
-                    residual_conv2D_block(512, 1, 1, initializer, 'min', name='res_14'),
+                    residual_conv2D_block(512, 1, 1, initializer, 'min', name='res_14')                 
+        ]
 
-                    layers.Flatten(name='flatten'),
+        self.layers_list_p2 = [layers.MaxPooling2D(pool_size=(2, 2), strides=None, padding="valid", name='pool_15'),
+                               
+                    residual_conv2D_block(512, 2, 3, initializer, 'min', name='res_16'),
 
-                    layers.Dense(2*latent_dim, name='dense_15'),
+                    residual_conv2D_block(512, 1, 3, initializer, 'min', name='res_16')
+        ]
 
-                    layers.ReLU(name='relu_16')
-                    
+        self.layers_list_p3 = [layers.Flatten(name='flatten'),
+
+                    layers.Dense(2*latent_dim, name='dense_last'),
+
+                    layers.ReLU(name='relu_last')
+
         ]
 
         self.z_out = layers.Dense(latent_dim, name="z_out")
 
     def call(self, input):
 
+        if self.inp_shape != (96,96,3) and self.inp_shape != (32,32,3):
+            raise ValueError('The input shape must be either (96,96,3) or (32,32,3). Received '+str(self.inp_shape))
+
+
         x = input
-        for layer in self.layers_list:
+        for layer in self.layers_list_p1:
+            x = layer(x)
+        
+        if self.inp_shape==(96,96,3):
+            for layer in self.layers_list_p2:
+                x = layer(x)
+        
+        for layer in self.layers_list_p3:
             x = layer(x)
 
         z_out = self.z_out(x)
@@ -106,8 +130,8 @@ class Encoder_VAE(Encoder):
     Encoder for a VAE, subclassed from the encoder for an AE.
     '''
 
-    def __init__(self, initializer, latent_dim, seed, *args, **kwargs):
-        super().__init__(initializer, latent_dim)
+    def __init__(self, initializer, latent_dim, seed, inp_shape=(32,32,3), *args, **kwargs):
+        super().__init__(initializer, latent_dim, inp_shape)
         # repeating the arguments can be avoided by the use of *args **kwargs in both __init
         # and super().__init__ 
 
@@ -124,9 +148,21 @@ class Encoder_VAE(Encoder):
     
     def call(self, input): 
 
+        if self.inp_shape != (96,96,3) and self.inp_shape != (32,32,3):
+            raise ValueError('The input shape must be either (96,96,3) or (32,32,3). Received '+str(self.inp_shape))
+
+
         x = input
-        for layer in self.layers_list:
+        for layer in self.layers_list_p1:
             x = layer(x)
+        
+        if self.inp_shape==(96,96,3):
+            for layer in self.layers_list_p2:
+                x = layer(x)
+        
+        for layer in self.layers_list_p3:
+            x = layer(x)
+
         z_m = self.z_mean(x)
         z_lv = self.z_log_var(x)
 
@@ -146,10 +182,15 @@ class Decoder(Layer):
     --Add the architecture.  
     '''
 
-    def __init__(self, initializer, latent_dim, *args, **kwargs):
+    def __init__(self, initializer, latent_dim, final_out_shape=(32,32,3),*args, **kwargs):
         super().__init__()
+        '''
+        The final_out_size should be either (32,32,3), which is the default, or (96,96,3).
+        '''
 
-        self.layers_list = [layers.Dense(2*latent_dim, name='dense_1'), 
+        self.out_shape = final_out_shape
+
+        self.layers_list_p1 = [layers.Dense(2*latent_dim, name='dense_1'), 
                     
                     layers.ReLU(name='relu_2'),
 
@@ -197,18 +238,33 @@ class Decoder(Layer):
 
                     residual_conv2D_block(64, 1, 2, initializer, 'min', name='res_23'),
 
-                    bridge_residual_conv2D_block(32, 1, 2, initializer, 'min', name='bres_24'),
-
-                    residual_conv2D_block(32, 1, 2, initializer, 'min', name='res_25')
+                    bridge_residual_conv2D_block(32, 1, 2, initializer, 'min', name='bres_24')
         ]
+
+        self.layers_list_p2 = [
+                    layers.UpSampling2D(size=(3, 3), data_format=None, interpolation='bilinear', name='upsampling_25'),
+                    bridge_residual_conv2D_block(32, 1, 2, initializer, 'min', name='bres_26'),
+                    residual_conv2D_block(32, 2, 2, initializer, 'min', name='res_27')
+        ]
+
+        self.layers_list_p3 = [residual_conv2D_block(32, 1, 2, initializer, 'min', name='res_25')]
 
         self.img_out = layers.Conv2D(3, 1, activation='sigmoid', padding='valid', kernel_initializer=initializer, name='img_out')
 
     def call(self, latent_input):
 
         x = latent_input
-        for layer in self.layers_list:
+        for layer in self.layers_list_p1:
             x = layer(x)
+
+        if self.out_shape == (96,96,3):
+            for layer in self.layers_list_p2:
+                x = layer(x)
+        elif self.out_shape == (32,32,3):
+            for layer in self.layers_list_p3:
+                x = layer(x)
+        else:
+            raise ValueError('The final output shape must be either (32,32,3) or (96,96,3). Received '+ str(self.out_shape))
         
         img_out = self.img_out(x)
 
@@ -225,15 +281,24 @@ class Decoder_VAE(Decoder):
     Decoder for a VAE, subclassed from the decoder for an AE, identical to it.
     '''
 
-    def __init__(self, initializer, latent_dim, *args, **kwargs):
-        super().__init__(initializer, latent_dim)
+    def __init__(self, initializer, latent_dim, final_out_shape, *args, **kwargs):
+        super().__init__(initializer, latent_dim, final_out_shape)
 
-    def call(self, latent_inp):
+    def call(self, latent_input):
 
-        x = latent_inp
-        for layer in self.layers_list:
+        x = latent_input
+        for layer in self.layers_list_p1:
             x = layer(x)
 
+        if self.out_shape == (96,96,3):
+            for layer in self.layers_list_p2:
+                x = layer(x)
+        elif self.out_shape == (32,32,3):
+            for layer in self.layers_list_p3:
+                x = layer(x)
+        else:
+            raise ValueError('The final output shape must be either (32,32,3) or (96,96,3). Received '+ str(self.out_shape))
+        
         img_out = self.img_out(x)
 
         return img_out
@@ -250,11 +315,13 @@ class AE(Model):
     Returns an AE subclassed from the Model class, composed of an Encoder object and a Decoder object.
     '''
 
-    def __init__(self, initializer, latent_dim, *args, **kwargs):
+    def __init__(self, initializer, latent_dim, inp_shape=(32,32,3), *args, **kwargs):
         super().__init__()
 
-        self.encoder = Encoder(initializer, latent_dim)
-        self.decoder = Decoder(initializer, latent_dim)
+        self.out_shape = inp_shape
+
+        self.encoder = Encoder(initializer, latent_dim, inp_shape)
+        self.decoder = Decoder(initializer, latent_dim, self.out_shape)
 
     def call(self, input):
 
@@ -274,11 +341,13 @@ class VAE(Model):
     Returns a VAE subclassed from the Model class, composed of Encoder_VAE and Decoder_VAE.
     '''
 
-    def __init__(self,initializer, latent_dim, seed, *args, **kwargs):
+    def __init__(self,initializer, latent_dim, seed, inp_shape=(32,32,3), *args, **kwargs):
         super().__init__()
 
-        self.encoder = Encoder_VAE(initializer, latent_dim, seed)
-        self.decoder = Decoder_VAE(initializer, latent_dim)
+        self.out_shape = inp_shape
+
+        self.encoder = Encoder_VAE(initializer, latent_dim, seed, inp_shape)
+        self.decoder = Decoder_VAE(initializer, latent_dim, self.out_shape)
 
     def call(self, input):
 

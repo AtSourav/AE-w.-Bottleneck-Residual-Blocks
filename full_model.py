@@ -38,7 +38,7 @@ class AE_perceptual():
 
         inputs = keras.Input(shape=inp_shape)
 
-        self.AE = AE(initializer, latent_dim)
+        self.AE = AE(initializer, latent_dim, inp_shape)
 
         AE_out = self.AE(inputs)
 
@@ -89,7 +89,7 @@ class VAE_perceptual():
 
         inputs = keras.Input(shape=inp_shape)
 
-        self.VAE = VAE(initializer, latent_dim, seed)
+        self.VAE = VAE(initializer, latent_dim, seed, inp_shape)
 
         VAE_out = self.VAE(inputs)
 
